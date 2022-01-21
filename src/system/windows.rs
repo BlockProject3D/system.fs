@@ -26,4 +26,47 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod system;
+use std::ffi::OsString;
+use std::path::PathBuf;
+use windows_sys::core::GUID;
+use windows_sys::Win32::Foundation::{MAX_PATH, PWSTR, S_OK};
+use windows_sys::Win32::UI::Shell::SHGetKnownFolderPath;
+use crate::system::{App, AppDirs};
+
+fn get_windows_path(folder: GUID) -> Option<PathBuf> {
+    unsafe {
+        let str: [u16; MAX_PATH as _] = [0; MAX_PATH as _];
+        let res = SHGetKnownFolderPath(&folder, 0, std::ptr::null(), &str as _);
+        if res != S_OK {
+            return None;
+        }
+        let mut count: usize = 0;
+        while str[count] != 0 {
+            count += 1;
+        }
+        let str = OsString::from_wide(&str[..count]);
+        Some(str.into())
+    }
+}
+
+impl AppDirs for App {
+    fn get_cache() -> Option<PathBuf> {
+        todo!()
+    }
+
+    fn get_config() -> Option<PathBuf> {
+        todo!()
+    }
+
+    fn get_data() -> Option<PathBuf> {
+        todo!()
+    }
+
+    fn get_logs() -> Option<PathBuf> {
+        todo!()
+    }
+
+    fn get_documents() -> Option<PathBuf> {
+        todo!()
+    }
+}

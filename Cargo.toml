@@ -1,11 +1,11 @@
 [package]
-name = "test"
+name = "bp3d-fs"
 version = "0.1.0"
 authors = ["Yuri Edward <yuri6037@outlook.com>"]
 edition = "2018"
-description = ""
+description = "Alternative to dirs-rs with better cross platform support and support for Mac/iOS app sandbox."
 license = "BSD-3-Clause"
-repository = "https://gitlab.com/bp3d/test"
+repository = "https://gitlab.com/bp3d/fs"
 readme = "./README.MD"
 keywords = []
 categories = []
@@ -14,5 +14,11 @@ categories = []
 
 [dependencies]
 
-[features]
+[target.'cfg(target_vendor = "apple")'.dependencies]
+objc = "0.2.7"
+objc-foundation = "0.1.1"
 
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.30.0", features = ["Win32_UI_Shell", "Win32_Foundation"] }
+
+[features]
