@@ -27,51 +27,45 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use std::path::PathBuf;
-use crate::system::{App, AppDirs, User, UserDirs};
-use crate::system::apple_shared::{get_macos_dir, get_macos_dir_fail_if_sandbox, NS_APPLICATION_SUPPORT_DIRECTORY, NS_CACHES_DIRECTORY, NS_DOCUMENT_DIRECTORY, NS_DOWNLOADS_DIRECTORY, NS_LIBRARY_DIRECTORY, NS_USER_DIRECTORY};
+use crate::dirs::system::{App, AppDirs, User, UserDirs};
+use crate::dirs::system::apple_shared::{get_macos_dir, get_macos_dir_fail_if_sandbox, NS_APPLICATION_SUPPORT_DIRECTORY, NS_CACHES_DIRECTORY, NS_DOCUMENT_DIRECTORY, NS_DOWNLOADS_DIRECTORY, NS_LIBRARY_DIRECTORY, NS_USER_DIRECTORY};
 
-impl AppDirs for App
-{
-    fn get_cache() -> Option<PathBuf> {
-        get_macos_dir(NS_CACHES_DIRECTORY).map(|v| PathBuf::from(v))
-    }
+pub fn get_app_cache() -> Option<PathBuf> {
+    get_macos_dir(NS_CACHES_DIRECTORY).map(|v| PathBuf::from(v))
+}
 
-    fn get_config() -> Option<PathBuf> {
-        get_macos_dir(NS_LIBRARY_DIRECTORY).map(|path| PathBuf::from(path).join("Preferences"))
-    }
+pub fn get_app_config() -> Option<PathBuf> {
+    get_macos_dir(NS_LIBRARY_DIRECTORY).map(|path| PathBuf::from(path).join("Preferences"))
+}
 
-    fn get_data() -> Option<PathBuf> {
-        get_macos_dir(NS_APPLICATION_SUPPORT_DIRECTORY).map(|v| PathBuf::from(v))
-    }
+pub fn get_app_data() -> Option<PathBuf> {
+    get_macos_dir(NS_APPLICATION_SUPPORT_DIRECTORY).map(|v| PathBuf::from(v))
+}
 
-    fn get_logs() -> Option<PathBuf> {
-        get_macos_dir(NS_LIBRARY_DIRECTORY).map(|path| PathBuf::from(path).join("Logs"))
-    }
+pub fn get_app_logs() -> Option<PathBuf> {
+    get_macos_dir(NS_LIBRARY_DIRECTORY).map(|path| PathBuf::from(path).join("Logs"))
+}
 
-    fn get_documents() -> Option<PathBuf> {
-        if let Some(dir) = get_macos_dir(NS_DOCUMENT_DIRECTORY) {
-            if dir.contains("Library/Containers/") { //Running in a sandbox
-                Some(PathBuf::from(dir))
-            } else {
-                None
-            }
+pub fn get_app_documents() -> Option<PathBuf> {
+    if let Some(dir) = get_macos_dir(NS_DOCUMENT_DIRECTORY) {
+        if dir.contains("Library/Containers/") { //Running in a sandbox
+            Some(PathBuf::from(dir))
         } else {
             None
         }
+    } else {
+        None
     }
 }
 
-impl UserDirs for User
-{
-    fn get_home() -> Option<PathBuf> {
-        get_macos_dir(NS_USER_DIRECTORY).map(|v| PathBuf::from(v))
-    }
+pub fn get_user_home() -> Option<PathBuf> {
+    get_macos_dir(NS_USER_DIRECTORY).map(|v| PathBuf::from(v))
+}
 
-    fn get_documents() -> Option<PathBuf> {
-        get_macos_dir_fail_if_sandbox(NS_DOCUMENT_DIRECTORY)
-    }
+pub fn get_user_documents() -> Option<PathBuf> {
+    get_macos_dir_fail_if_sandbox(NS_DOCUMENT_DIRECTORY)
+}
 
-    fn get_downloads() -> Option<PathBuf> {
-        get_macos_dir_fail_if_sandbox(NS_DOWNLOADS_DIRECTORY)
-    }
+pub fn get_user_downloads() -> Option<PathBuf> {
+    get_macos_dir_fail_if_sandbox(NS_DOWNLOADS_DIRECTORY)
 }

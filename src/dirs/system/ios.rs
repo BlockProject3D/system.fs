@@ -26,47 +26,37 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::ffi::OsString;
 use std::path::PathBuf;
-use windows_sys::core::GUID;
-use windows_sys::Win32::Foundation::{MAX_PATH, PWSTR, S_OK};
-use windows_sys::Win32::UI::Shell::SHGetKnownFolderPath;
-use crate::system::{App, AppDirs};
+use crate::dirs::system::{App, AppDirs, User, UserDirs};
+use crate::dirs::system::apple_shared::{get_macos_dir, get_macos_dir_fail_if_sandbox, NS_APPLICATION_SUPPORT_DIRECTORY, NS_CACHES_DIRECTORY, NS_DOCUMENT_DIRECTORY, NS_DOWNLOADS_DIRECTORY, NS_LIBRARY_DIRECTORY, NS_USER_DIRECTORY};
 
-fn get_windows_path(folder: GUID) -> Option<PathBuf> {
-    unsafe {
-        let str: [u16; MAX_PATH as _] = [0; MAX_PATH as _];
-        let res = SHGetKnownFolderPath(&folder, 0, std::ptr::null(), &str as _);
-        if res != S_OK {
-            return None;
-        }
-        let mut count: usize = 0;
-        while str[count] != 0 {
-            count += 1;
-        }
-        let str = OsString::from_wide(&str[..count]);
-        Some(str.into())
-    }
+pub fn get_app_cache() -> Option<PathBuf> {
+    get_macos_dir(NS_CACHES_DIRECTORY).map(|v| PathBuf::from(v))
 }
 
-impl AppDirs for App {
-    fn get_cache() -> Option<PathBuf> {
-        todo!()
-    }
+pub fn get_app_config() -> Option<PathBuf> {
+    get_macos_dir(NS_LIBRARY_DIRECTORY).map(|path| PathBuf::from(path).join("Preferences"))
+}
 
-    fn get_config() -> Option<PathBuf> {
-        todo!()
-    }
+pub fn get_app_data() -> Option<PathBuf> {
+    get_macos_dir(NS_APPLICATION_SUPPORT_DIRECTORY).map(|v| PathBuf::from(v))
+}
 
-    fn get_data() -> Option<PathBuf> {
-        todo!()
-    }
+pub fn get_app_logs() -> Option<PathBuf> {
+    None
+}
 
-    fn get_logs() -> Option<PathBuf> {
-        todo!()
-    }
+fn get_app_documents() -> Option<PathBuf> {
+    get_macos_dir(NS_DOCUMENT_DIRECTORY).map(|v| PathBuf::from(v))
+}
 
-    fn get_documents() -> Option<PathBuf> {
-        todo!()
-    }
+//On iOS there exists no user directories as all applications are sandboxed
+pub fn get_user_home() -> Option<PathBuf> {
+    None
+}
+pub fn get_user_documents() -> Option<PathBuf> {
+    None
+}
+pub fn get_user_downloads() -> Option<PathBuf> {
+    None
 }

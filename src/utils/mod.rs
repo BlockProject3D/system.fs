@@ -26,49 +26,25 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! Low-level access to standard system directories.
-//!
-//! Unsupported directories are returned as None.
+pub use dunce::canonicalize;
+use std::path::Path;
 
-use std::path::PathBuf;
-
-/// Provide access to per-platform global application directories.
-pub trait AppDirs
+/// Open the given path in a file explorer on the current platform.
+///
+/// This is unsupported on iOS as iOS can already expose application files in the Files app since iOS 11.
+pub fn open(path: &Path)
 {
-    fn get_cache() -> Option<PathBuf>;
-    fn get_config() -> Option<PathBuf>;
-    fn get_data() -> Option<PathBuf>;
-    fn get_logs() -> Option<PathBuf>;
-    fn get_documents() -> Option<PathBuf>;
+
 }
 
-/// Provide access to per-platform current user directories.
-pub trait UserDirs
+/// Hides the given path in the current platform's file explorer.
+pub fn hide(path: &Path)
 {
-    fn get_home() -> Option<PathBuf>;
-    fn get_documents() -> Option<PathBuf>;
-    fn get_downloads() -> Option<PathBuf>;
+
 }
 
-pub struct App
+/// Un-hides the given path in the current platform's file explorer.
+pub fn unhide(path: &Path)
 {
+
 }
-
-pub struct User
-{
-}
-
-#[cfg(target_vendor = "apple")]
-mod apple_shared;
-
-#[cfg(target_os = "macos")]
-mod macos;
-
-#[cfg(target_os = "linux")]
-mod linux;
-
-#[cfg(target_os = "ios")]
-mod ios;
-
-#[cfg(windows)]
-mod windows;
