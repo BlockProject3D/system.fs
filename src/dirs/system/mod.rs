@@ -73,7 +73,7 @@ mod ios;
 #[cfg(windows)]
 mod windows;
 
-#[cfg(any(target_os = "linux", target_os = "freebsd"))]
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
 use linux as _impl;
 #[cfg(target_os = "macos")]
 use macos as _impl;
