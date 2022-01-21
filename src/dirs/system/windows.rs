@@ -32,7 +32,6 @@ use std::path::PathBuf;
 use windows_sys::core::GUID;
 use windows_sys::Win32::Foundation::{MAX_PATH, PWSTR, S_OK};
 use windows_sys::Win32::UI::Shell::{SHGetKnownFolderPath, FOLDERID_LocalAppData, FOLDERID_RoamingAppData, FOLDERID_Documents, FOLDERID_Downloads, FOLDERID_Profile};
-use crate::dirs::system::{App, AppDirs};
 
 fn get_windows_path(folder: GUID) -> Option<PathBuf> {
     unsafe {

@@ -32,44 +32,14 @@
 
 use std::path::PathBuf;
 
-/// Provide access to per-platform global application directories.
-pub trait AppDirs
-{
-    fn get_cache() -> Option<PathBuf>;
-    fn get_config() -> Option<PathBuf>;
-    fn get_data() -> Option<PathBuf>;
-    fn get_logs() -> Option<PathBuf>;
-    fn get_documents() -> Option<PathBuf>;
-}
-
-/// Provide access to per-platform current user directories.
-pub trait UserDirs
-{
-    fn get_home() -> Option<PathBuf>;
-    fn get_documents() -> Option<PathBuf>;
-    fn get_downloads() -> Option<PathBuf>;
-}
-
-pub struct App
-{
-}
-
-pub struct User
-{
-}
-
 #[cfg(target_vendor = "apple")]
 mod apple_shared;
-
 #[cfg(target_os = "macos")]
 mod macos;
-
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
 mod linux;
-
 #[cfg(target_os = "ios")]
 mod ios;
-
 #[cfg(windows)]
 mod windows;
 

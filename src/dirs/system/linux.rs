@@ -27,7 +27,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use std::path::PathBuf;
-use crate::dirs::system::{App, AppDirs, User, UserDirs};
 
 pub fn get_app_cache() -> Option<PathBuf> {
     if let Some(dir) = std::env::var_os("XDG_CACHE_HOME") {
