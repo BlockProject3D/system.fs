@@ -32,6 +32,7 @@ use std::path::PathBuf;
 use windows_sys::core::GUID;
 use windows_sys::Win32::Foundation::{MAX_PATH, PWSTR, S_OK};
 use windows_sys::Win32::UI::Shell::{SHGetKnownFolderPath, FOLDERID_LocalAppData, FOLDERID_RoamingAppData, FOLDERID_Documents, FOLDERID_Downloads, FOLDERID_Profile};
+use windows_sys::Win32::System::Com::CoTaskMemFree;
 
 fn get_windows_path(folder: GUID) -> Option<PathBuf> {
     unsafe {
@@ -46,8 +47,9 @@ fn get_windows_path(folder: GUID) -> Option<PathBuf> {
             count += 1;
         }
         let slice = std::slice::from_raw_parts(str, count);
-        let str = OsString::from_wide(&slice);
-        Some(str.into())
+        let str1 = OsString::from_wide(&slice);
+        CoTaskMemFree(str as _);
+        Some(str1.into())
     }
 }
 
