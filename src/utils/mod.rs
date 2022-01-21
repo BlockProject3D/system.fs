@@ -29,22 +29,120 @@
 pub use dunce::canonicalize;
 use std::path::Path;
 
+#[cfg(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android"))))]
+fn attempt_dbus_call(path: &Path) -> bool
+{
+    use std::ffi::OsString;
+    use zbus::{blocking::Connection, dbus_proxy, Result};
+    #[dbus_proxy(
+        default_service = "org.freedesktop.FileManager1",
+        interface = "org.freedesktop.FileManager1",
+        default_path = "/org/freedesktop/FileManager1"
+    )]
+    trait FileManager
+    {
+        fn show_folders(&self, uris: &[&str], startup_id: &str) -> Result<()>;
+        fn show_items(&self, uris: &[&str], startup_id: &str) -> Result<()>;
+    }
+    let con = match Connection::session() {
+        Ok(v) => v,
+        Err(_) => return false
+    };
+    let proxy = match FileManagerProxyBlocking::new(&con) {
+        Ok(v) => v,
+        Err(_) => return false
+    };
+    let mut uri = OsString::from("file://");
+    let f = match canonicalize(path.as_os_str()) {
+        Ok(v) => v,
+        Err(_) => return false
+    };
+    uri.push(f);
+    let res;
+    if path.is_dir() {
+        res = proxy.show_folders(&[&uri.to_string_lossy()], "test");
+    } else {
+        res = proxy.show_items(&[&uri.to_string_lossy()], "test");
+    }
+    match res {
+        Ok(_) => true,
+        Err(_) => false
+    }
+}
+
+#[cfg(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android"))))]
+fn attempt_xdg_open(path: &Path) -> bool
+{
+    use std::process::Command;
+    use std::ffi::OsString;
+    let mut uri = OsString::from("file://");
+    let f = match canonicalize(path.as_os_str()) {
+        Ok(v) => v,
+        Err(_) => return false
+    };
+    uri.push(f);
+    let res = Command::new("xdg-open")
+        .args([&*uri.to_string_lossy()])
+        .output();
+    match res {
+        Ok(_) => true,
+        Err(_) => false
+    }
+}
+
 /// Open the given path in a file explorer on the current platform.
 ///
 /// This is unsupported on iOS as iOS can already expose application files in the Files app since iOS 11.
-pub fn open(path: &Path)
+pub fn open<T: AsRef<Path>>(path: T) -> bool
 {
-
+    let path = path.as_ref();
+    #[cfg(windows)]
+        unsafe {
+            use std::os::windows::ffi::OsStrExt;
+            use windows_sys::Win32::UI::Shell::ShellExecuteW;
+            use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOW;
+            use windows_sys::Win32::Foundation::PWSTR;
+            let operation = ['o' as u16, 'p' as u16, 'e' as u16, 'n' as u16, 0x0000];
+            let mut file: Vec<u16> = path.as_os_str().encode_wide().collect();
+            file.push(0x0000);
+            // Well windows-sys is badly designed it treats all strings as mutable
+            // even though the official MS docs uses constant strings
+            let file: PWSTR = std::mem::transmute(file.as_ptr());
+            let operation: PWSTR = std::mem::transmute(operation.as_ptr());
+            let res = ShellExecuteW(0, operation, file, std::ptr::null_mut(), std::ptr::null_mut(), SW_SHOW as _);
+            return res > 32
+        }
+    #[cfg(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android"))))]
+        {
+            let mut flag = attempt_dbus_call(path);
+            if !flag {
+                flag = attempt_xdg_open(path);
+            }
+            return flag;
+        }
 }
 
 /// Hides the given path in the current platform's file explorer.
-pub fn hide(path: &Path)
+pub fn hide<T: AsRef<Path>>(path: T)
 {
 
 }
 
 /// Un-hides the given path in the current platform's file explorer.
-pub fn unhide(path: &Path)
+pub fn unhide<T: AsRef<Path>>(path: T)
 {
 
+}
+
+#[cfg(test)]
+mod tests
+{
+    use crate::utils::open;
+    use crate::dirs::system::get_app_data;
+
+    #[test]
+    fn open_test()
+    {
+        assert!(open(get_app_data().unwrap()));
+    }
 }
