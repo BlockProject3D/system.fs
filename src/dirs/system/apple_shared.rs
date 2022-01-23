@@ -26,9 +26,9 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::os::raw::{c_char, c_ulong};
+use std::os::raw::c_ulong;
 use std::path::PathBuf;
-use objc::{class, Message};
+use objc::class;
 use objc::msg_send;
 use objc::sel;
 use objc::sel_impl;
@@ -57,7 +57,7 @@ pub fn get_macos_dir(directory: c_ulong) -> Option<String>
             }
             let data = (*str).as_str();
             let copy = String::from(data);
-            let _: () = msg_send![directories, release];
+            // do not release array as array is still owned by Foundation
             Some(copy)
         } else {
             None
