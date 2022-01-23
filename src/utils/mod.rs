@@ -203,8 +203,24 @@ pub fn hide<T: AsRef<Path>>(path: T) -> bool
             }
             return false; //the path does not have a valid file name; can't do anything.
         } else {
-            //TODO: implement
-            return false;
+            use std::os::windows::ffi::OsStrExt;
+            use windows_sys::Win32::Storage::FileSystem::SetFileAttributesW;
+            use windows_sys::Win32::Storage::FileSystem::GetFileAttributesW;
+            use windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_HIDDEN;
+            use windows_sys::Win32::Storage::FileSystem::INVALID_FILE_ATTRIBUTES;
+            use windows_sys::Win32::Foundation::PWSTR;
+            let mut file: Vec<u16> = path.as_os_str().encode_wide().collect();
+            file.push(0x0000);
+            unsafe {
+                // Well windows-sys is badly designed it treats all strings as mutable
+                // even though the official MS docs uses constant strings
+                let file: PWSTR = std::mem::transmute(file.as_ptr());
+                let attrs = GetFileAttributesW(file);
+                if attrs == INVALID_FILE_ATTRIBUTES {
+                    return false;
+                }
+                return SetFileAttributesW(file, attrs | FILE_ATTRIBUTE_HIDDEN) != 0;
+            }
         }
     }
 }
@@ -238,8 +254,24 @@ pub fn unhide<T: AsRef<Path>>(path: T) -> bool
             }
             return false; //the path does not have a valid file name; can't do anything.
         } else {
-            //TODO: implement
-            return false;
+            use std::os::windows::ffi::OsStrExt;
+            use windows_sys::Win32::Storage::FileSystem::SetFileAttributesW;
+            use windows_sys::Win32::Storage::FileSystem::GetFileAttributesW;
+            use windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_HIDDEN;
+            use windows_sys::Win32::Storage::FileSystem::INVALID_FILE_ATTRIBUTES;
+            use windows_sys::Win32::Foundation::PWSTR;
+            let mut file: Vec<u16> = path.as_os_str().encode_wide().collect();
+            file.push(0x0000);
+            unsafe {
+                // Well windows-sys is badly designed it treats all strings as mutable
+                // even though the official MS docs uses constant strings
+                let file: PWSTR = std::mem::transmute(file.as_ptr());
+                let attrs = GetFileAttributesW(file);
+                if attrs == INVALID_FILE_ATTRIBUTES {
+                    return false;
+                }
+                return SetFileAttributesW(file, attrs & !FILE_ATTRIBUTE_HIDDEN) != 0;
+            }
         }
     }
 }
