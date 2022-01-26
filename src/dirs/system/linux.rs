@@ -26,7 +26,8 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::path::PathBuf;
+use std::env::VarError;
+use std::path::{Path, PathBuf};
 
 pub fn get_app_cache() -> Option<PathBuf> {
     if let Some(dir) = std::env::var_os("XDG_CACHE_HOME") {
@@ -64,6 +65,30 @@ pub fn get_app_logs() -> Option<PathBuf> {
 
 pub fn get_app_documents() -> Option<PathBuf> {
     None //Per-application documents are unsupported under linux
+}
+
+fn get_exe_path() -> Option<PathBuf>
+{
+    let path = Path::new("/proc/self/exe");
+    let link = match std::fs::read_link(&path) {
+        Ok(v) => v,
+        Err(_) => return None
+    };
+    link.parent.map(|v| v.into())
+}
+
+pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
+{
+    //Locate app assets folder.
+    let assets = get_exe_path()?.join("Assets");
+    //Obtain system language.
+    let lang = match std::env::var("LANGUAGE") {
+        Ok(v) => v,
+        Err(_) => return None
+    };
+    let comps = lang.split(":"); //Normally 2 components:
+    //let localized = exe.join()
+    None
 }
 
 pub fn get_user_home() -> Option<PathBuf> {
