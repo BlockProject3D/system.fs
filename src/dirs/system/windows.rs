@@ -30,9 +30,10 @@ use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use std::path::PathBuf;
 use windows_sys::core::GUID;
-use windows_sys::Win32::Foundation::{PWSTR, S_OK};
+use windows_sys::Win32::Foundation::{MAX_PATH, PWSTR, S_OK};
 use windows_sys::Win32::UI::Shell::{SHGetKnownFolderPath, FOLDERID_LocalAppData, FOLDERID_RoamingAppData, FOLDERID_Documents, FOLDERID_Downloads, FOLDERID_Profile};
 use windows_sys::Win32::System::Com::CoTaskMemFree;
+use windows_sys::Win32::System::LibraryLoader::GetModuleFileNameW;
 
 fn get_windows_path(folder: GUID) -> Option<PathBuf> {
     unsafe {
@@ -71,6 +72,28 @@ pub fn get_app_logs() -> Option<PathBuf> {
 
 pub fn get_app_documents() -> Option<PathBuf> {
     None //There's no dedicated app documents (public files) folder under windows.
+}
+
+fn get_exe_path() -> Option<PathBuf>
+{
+    unsafe {
+        let mut buf: [u16; MAX_PATH as usize] = [0; MAX_PATH as usize];
+        let res = GetModuleFileNameW(0, &mut buf as _, MAX_PATH);
+        if res == 0 {
+            return None;
+        }
+        let str1 = OsString::from_wide(&buf[..(res - 1) as usize]);
+        Some(str1.into())
+    }
+}
+
+pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
+{
+    //Locate app assets folder.
+    let assets = get_exe_path()?.join("Assets");
+    //Concat with file_name.
+    let file = assets.join(file_name);
+    Some(file)
 }
 
 pub fn get_user_home() -> Option<PathBuf> {
