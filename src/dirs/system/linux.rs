@@ -81,14 +81,9 @@ pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
 {
     //Locate app assets folder.
     let assets = get_exe_path()?.join("Assets");
-    //Obtain system language.
-    let lang = match std::env::var("LANGUAGE") {
-        Ok(v) => v,
-        Err(_) => return None
-    };
-    let comps = lang.split(":"); //Normally 2 components:
-    //let localized = exe.join()
-    None
+    //Concat with file_name.
+    let file = assets.join(file_name);
+    Some(file)
 }
 
 pub fn get_user_home() -> Option<PathBuf> {
