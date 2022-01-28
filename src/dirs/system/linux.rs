@@ -26,7 +26,6 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::env::VarError;
 use std::path::{Path, PathBuf};
 
 pub fn get_app_cache() -> Option<PathBuf> {
@@ -67,14 +66,54 @@ pub fn get_app_documents() -> Option<PathBuf> {
     None //Per-application documents are unsupported under linux
 }
 
+#[cfg(target_os = "freebsd")]
+fn get_exe_path_freebsd() -> Option<PathBuf>
+{
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
+    use libc::sysctl;
+    use libc::strlen;
+    use libc::size_t;
+    use libc::CTL_KERN;
+    use libc::KERN_PROC;
+    use libc::KERN_PROC_PATHNAME;
+    let mut mib = [CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1];
+    let mut buf: Vec<u8> = Vec::with_capacity(1024);
+    let mut cb: size_t = 1024;
+    unsafe {
+        let res = sysctl(mib.as_mut_ptr(), 4, buf.as_mut_ptr() as *mut _, &mut cb as _, std::ptr::null_mut(), 0);
+        if res == 0 {
+            //FreeBSD without procfs.
+            let len = strlen(buf.as_ptr() as _);
+            //This is where we defer from process_path: we use std::os::unix::ffi::OsStrExt.
+            let str = OsStr::from_bytes(&buf[..len]);
+            let path = PathBuf::from(str);
+            Some(path)
+        } else {
+            //FreeBSD with procfs.
+            std::fs::read_link("/proc/curproc/file").ok()
+        }
+    }
+}
+
 fn get_exe_path() -> Option<PathBuf>
 {
-    let path = Path::new("/proc/self/exe");
-    let link = match std::fs::read_link(&path) {
-        Ok(v) => v,
-        Err(_) => return None
-    };
-    link.parent.map(|v| v.into())
+    cfg_if::cfg_if! {
+        if #[cfg(target_os = "freebsd")] {
+            get_exe_path_freebsd().parent().map(|v| v.into())
+        } else {
+            //Try various paths to match as many unix systems as possible.
+            let mut path = Path::new("/proc/self/exe");
+            if !path.exists() {
+                path = Path::new("/proc/curproc/exe");
+            }
+            if !path.exists() {
+                path = Path::new("/proc/curproc/file");
+            }
+            let link = std::fs::read_link(path).ok()?;
+            link.parent().map(|v| v.into())
+        }
+    }
 }
 
 pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
