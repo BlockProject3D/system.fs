@@ -30,7 +30,7 @@ use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use std::path::PathBuf;
 use windows_sys::core::GUID;
-use windows_sys::Win32::Foundation::{MAX_PATH, PWSTR, S_OK};
+use windows_sys::Win32::Foundation::{ERROR_INSUFFICIENT_BUFFER, GetLastError, MAX_PATH, PWSTR, S_OK};
 use windows_sys::Win32::UI::Shell::{SHGetKnownFolderPath, FOLDERID_LocalAppData, FOLDERID_RoamingAppData, FOLDERID_Documents, FOLDERID_Downloads, FOLDERID_Profile};
 use windows_sys::Win32::System::Com::CoTaskMemFree;
 use windows_sys::Win32::System::LibraryLoader::GetModuleFileNameW;
@@ -77,12 +77,39 @@ pub fn get_app_documents() -> Option<PathBuf> {
 fn get_exe_path() -> Option<PathBuf>
 {
     unsafe {
+        //Try fast path with MAX_PATH which should work for most windows versions.
         let mut buf: [u16; MAX_PATH as usize] = [0; MAX_PATH as usize];
         let res = GetModuleFileNameW(0, &mut buf as _, MAX_PATH);
         if res == 0 {
-            return None;
+            return None; //System error.
+        } else if res == MAX_PATH {
+            //We might have a problem where the buffer is not large enough...
+            let err = GetLastError();
+            if err == ERROR_INSUFFICIENT_BUFFER {
+                //We definitely have a buffer length problem!
+                let mut len = MAX_PATH as usize * 2;
+                loop {
+                    //Start allocating twice buffer size.
+                    let mut v = Vec::with_capacity(len);
+                    //Attempt reading module file name again.
+                    let res = GetModuleFileNameW(0, v.as_mut_ptr(), len);
+                    if res == 0 {
+                        return None; //System error.
+                    } else if res == len {
+                        let err = GetLastError();
+                        if err != ERROR_INSUFFICIENT_BUFFER {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                    //If this reaches, well it's still not looking good, and we need more re-allocations.
+                    len *= 2;
+                }
+            }
         }
-        let str1 = OsString::from_wide(&buf[..(res - 1) as usize]);
+        //We finally found the executable file name!
+        let str1 = OsString::from_wide(&buf[..res as usize]);
         Some(str1.into())
     }
 }
@@ -90,7 +117,7 @@ fn get_exe_path() -> Option<PathBuf>
 pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
 {
     //Locate app assets folder.
-    let assets = get_exe_path()?.join("Assets");
+    let assets = get_exe_path()?.parent().ok()?.join("Assets");
     //Concat with file_name.
     let file = assets.join(file_name);
     Some(file)
