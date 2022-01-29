@@ -29,7 +29,7 @@
 pub use dunce::canonicalize;
 use std::path::Path;
 
-#[cfg(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android"))))]
+#[cfg(all(unix, not(any(target_vendor = "apple", target_os = "android"))))]
 fn attempt_dbus_call(path: &Path) -> bool
 {
     use std::ffi::OsString;
@@ -70,7 +70,7 @@ fn attempt_dbus_call(path: &Path) -> bool
     }
 }
 
-#[cfg(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android"))))]
+#[cfg(all(unix, not(any(target_vendor = "apple", target_os = "android"))))]
 fn attempt_xdg_open(path: &Path) -> bool
 {
     use std::process::Command;

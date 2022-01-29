@@ -77,9 +77,10 @@ fn get_exe_path_freebsd() -> Option<PathBuf>
     use libc::CTL_KERN;
     use libc::KERN_PROC;
     use libc::KERN_PROC_PATHNAME;
+    use libc::PATH_MAX;
     let mut mib = [CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1];
-    let mut buf: Vec<u8> = Vec::with_capacity(1024);
-    let mut cb: size_t = 1024;
+    let mut buf: Vec<u8> = Vec::with_capacity(PATH_MAX);
+    let mut cb: size_t = PATH_MAX;
     unsafe {
         let res = sysctl(mib.as_mut_ptr(), 4, buf.as_mut_ptr() as *mut _, &mut cb as _, std::ptr::null_mut(), 0);
         if res == 0 {
