@@ -1,6 +1,6 @@
 [package]
 name = "bp3d-fs"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Yuri Edward <yuri6037@outlook.com>"]
 edition = "2018"
 description = "Alternative to dirs-rs with better cross platform support and support for Mac/iOS app sandbox."
