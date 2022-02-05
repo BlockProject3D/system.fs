@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use std::path::PathBuf;
+use crate::dirs::system::get_app_bundled_asset;
 
 pub mod system;
 
@@ -177,4 +178,13 @@ impl<'a> App<'a>
         }
         Ok(config)
     }
+}
+
+/// Gets a path to an application asset.
+/// Returns None if the asset couldn't be found.
+///
+/// On apple platforms this will look into the app bundle, on other platforms this looks
+/// in a subdirectory named "Assets" next to the application executable.
+pub fn get_asset(file_name: &str) -> Option<PathBuf> {
+    get_app_bundled_asset(file_name)
 }
