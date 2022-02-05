@@ -92,10 +92,10 @@ fn get_exe_path() -> Option<PathBuf>
                     //Start allocating twice buffer size.
                     let mut v = Vec::with_capacity(len);
                     //Attempt reading module file name again.
-                    let res = GetModuleFileNameW(0, v.as_mut_ptr(), len);
+                    let res = GetModuleFileNameW(0, v.as_mut_ptr(), len as u32);
                     if res == 0 {
                         return None; //System error.
-                    } else if res == len {
+                    } else if res == len as u32 {
                         let err = GetLastError();
                         if err != ERROR_INSUFFICIENT_BUFFER {
                             break;
@@ -117,7 +117,7 @@ fn get_exe_path() -> Option<PathBuf>
 pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
 {
     //Locate app assets folder.
-    let assets = get_exe_path()?.parent().ok()?.join("Assets");
+    let assets = get_exe_path()?.parent()?.join("Assets");
     //Concat with file_name.
     let file = assets.join(file_name);
     Some(file)
