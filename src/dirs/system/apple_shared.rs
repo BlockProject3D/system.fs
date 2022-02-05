@@ -26,8 +26,11 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::os::raw::c_ulong;
+use std::ffi::OsStr;
+use std::os::raw::{c_char, c_int, c_ulong};
+use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
+use libc::{PATH_MAX, strlen};
 use objc::class;
 use objc::msg_send;
 use objc::sel;
@@ -75,5 +78,86 @@ pub fn get_macos_dir_fail_if_sandbox(directory: c_ulong) -> Option<PathBuf>
         }
     } else {
         None
+    }
+}
+
+extern "C" {
+    pub fn _NSGetExecutablePath(buf: *mut c_char, bufsize: *mut u32) -> c_int;
+}
+
+pub fn get_exe_path() -> Option<PathBuf>
+{
+    let mut buf: [c_char; PATH_MAX as usize] = [0; PATH_MAX as usize];
+    let mut size: u32 = PATH_MAX as u32;
+    unsafe {
+        let res = _NSGetExecutablePath(&mut buf as _, &mut size as _);
+        if res == -1 {
+            //path is too large
+            let mut v = Vec::with_capacity(size as usize);
+            let res = _NSGetExecutablePath(v.as_mut_ptr(), &mut size as _);
+            if res != 0 { //Something really bad happened.
+                return None;
+            }
+            let str = OsStr::from_bytes(std::mem::transmute(&v[..size as usize]));
+            return Some(PathBuf::from(str));
+        }
+        if res != 0 {
+            return None;
+        }
+        let len = strlen(buf.as_ptr());
+        let str = OsStr::from_bytes(std::mem::transmute(&buf[..len as usize]));
+        Some(PathBuf::from(str))
+    }
+}
+
+pub fn get_bundled_asset(name: &str) -> Option<PathBuf>
+{
+    let (file_path, file_name) = name.rfind('/')
+        .map(|v| (Some(&name[..v]), &name[v + 1..]))
+        .unwrap_or_else(|| (None, name));
+    let (res_name, res_ext) = file_name.rfind('.')
+        .map(|v| (&file_name[..v], &file_name[v + 1..]))
+        .unwrap_or_else(|| (file_name, ""));
+    unsafe {
+        const NS_UTF8_STRING_ENCODING: c_ulong = 4;
+        let nsstring = class!(NSString);
+        let nsbundle = class!(NSBundle);
+        let bundle: *mut Object = msg_send![nsbundle, mainBundle];
+        if bundle == std::ptr::null_mut() {
+            return None;
+        }
+        let mut ns_res_name: *mut Object = msg_send![nsstring, alloc];
+        let mut ns_res_ext: *mut Object = msg_send![nsstring, alloc];
+        ns_res_name = msg_send![ns_res_name,
+                    initWithBytes: res_name.as_bytes().as_ptr()
+                    length: res_name.len() as c_ulong
+                    encoding: NS_UTF8_STRING_ENCODING
+        ];
+        ns_res_ext = msg_send![ns_res_ext,
+                    initWithBytes: res_ext.as_bytes().as_ptr()
+                    length: res_ext.len() as c_ulong
+                    encoding: NS_UTF8_STRING_ENCODING
+        ];
+        let str: *const NSString = match file_path {
+            None => msg_send![bundle, pathForResource: ns_res_name ofType: ns_res_ext],
+            Some(subpath) => {
+                let mut ns_subpath: *mut Object = msg_send![nsstring, alloc];
+                ns_subpath = msg_send![ns_subpath,
+                    initWithBytes: subpath.as_bytes().as_ptr()
+                    length: subpath.len() as c_ulong
+                    encoding: NS_UTF8_STRING_ENCODING
+                ];
+                let str = msg_send![bundle, pathForResource: ns_res_name ofType: ns_res_ext inDirectory: ns_subpath];
+                let _: () = msg_send![ns_subpath, release]; //release subpath as we're not gonna use it again anymore
+                str
+            }
+        };
+        let _: () = msg_send![ns_res_ext, release]; //release res_ext as we're not gonna use it again anymore
+        let _: () = msg_send![ns_res_name, release]; //release res_name as we're not gonna use it again anymore
+        if str == std::ptr::null() { //Asset wasn't found.
+            return None;
+        }
+        let data = (*str).as_str();
+        Some(PathBuf::from(data))
     }
 }
