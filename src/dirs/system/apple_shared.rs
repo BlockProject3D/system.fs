@@ -55,7 +55,7 @@ pub fn get_macos_dir(directory: c_ulong) -> Option<String>
         let directories: *const NSArray<NSObject> = msg_send![instance, URLsForDirectory:directory inDomains:NS_USER_DOMAIN_MASK];
         if let Some(obj) = (*directories).first_object() {
             let str: *const NSString = msg_send![obj, path];
-            if str == std::ptr::null() {
+            if str.is_null() {
                 return None;
             }
             let data = (*str).as_str();
@@ -123,7 +123,7 @@ pub fn get_bundled_asset(name: &str) -> Option<PathBuf>
         let nsstring = class!(NSString);
         let nsbundle = class!(NSBundle);
         let bundle: *mut Object = msg_send![nsbundle, mainBundle];
-        if bundle == std::ptr::null_mut() {
+        if bundle.is_null() {
             return None;
         }
         let mut ns_res_name: *mut Object = msg_send![nsstring, alloc];
@@ -154,7 +154,7 @@ pub fn get_bundled_asset(name: &str) -> Option<PathBuf>
         };
         let _: () = msg_send![ns_res_ext, release]; //release res_ext as we're not gonna use it again anymore
         let _: () = msg_send![ns_res_name, release]; //release res_name as we're not gonna use it again anymore
-        if str == std::ptr::null() { //Asset wasn't found.
+        if str.is_null() { //Asset wasn't found.
             return None;
         }
         let data = (*str).as_str();

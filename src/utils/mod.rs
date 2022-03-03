@@ -64,10 +64,7 @@ fn attempt_dbus_call(path: &Path) -> bool
     } else {
         res = proxy.show_items(&[&uri.to_string_lossy()], "test");
     }
-    match res {
-        Ok(_) => true,
-        Err(_) => false
-    }
+    res.is_ok()
 }
 
 #[cfg(all(unix, not(any(target_vendor = "apple", target_os = "android"))))]
@@ -84,10 +81,7 @@ fn attempt_xdg_open(path: &Path) -> bool
     let res = Command::new("xdg-open")
         .args([&*uri.to_string_lossy()])
         .output();
-    match res {
-        Ok(_) => true,
-        Err(_) => false
-    }
+    res.is_ok()
 }
 
 // Force link against AppKit on mac
@@ -116,14 +110,14 @@ pub fn open<T: AsRef<Path>>(path: T) -> bool
                 let file: PWSTR = std::mem::transmute(file.as_ptr());
                 let operation: PWSTR = std::mem::transmute(operation.as_ptr());
                 let res = ShellExecuteW(0, operation, file, std::ptr::null_mut(), std::ptr::null_mut(), SW_SHOW as _);
-                return res > 32
+                res > 32
             }
         } else if #[cfg(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android"))))] {
             let mut flag = attempt_dbus_call(path);
             if !flag {
                 flag = attempt_xdg_open(path);
             }
-            return flag;
+            flag
         } else if #[cfg(target_os = "macos")] {
             use std::os::unix::ffi::OsStrExt;
             use std::os::raw::c_ulong;
@@ -166,7 +160,7 @@ pub fn open<T: AsRef<Path>>(path: T) -> bool
                 // do not release the array as it's still owned by Foundation
                 let _: () = msg_send![url, release]; // release url (we used alloc)
                 let _: () = msg_send![str, release]; // release string (we used alloc)
-                return true;
+                true
             }
         } else {
             false
@@ -196,12 +190,9 @@ pub fn hide<T: AsRef<Path>>(path: T) -> bool
                 vec.insert(0, b'.');
                 let mut copy: PathBuf = path.into();
                 copy.set_file_name(OsString::from_raw_vec(vec).unwrap());
-                return match std::fs::rename(path, copy) {
-                    Ok(_) => true,
-                    Err(_) => false
-                };
+                return std::fs::rename(path, copy).is_ok();
             }
-            return false; //the path does not have a valid file name; can't do anything.
+            false //the path does not have a valid file name; can't do anything.
         } else {
             use std::os::windows::ffi::OsStrExt;
             use windows_sys::Win32::Storage::FileSystem::SetFileAttributesW;
@@ -219,7 +210,7 @@ pub fn hide<T: AsRef<Path>>(path: T) -> bool
                 if attrs == INVALID_FILE_ATTRIBUTES {
                     return false;
                 }
-                return SetFileAttributesW(file, attrs | FILE_ATTRIBUTE_HIDDEN) != 0;
+                SetFileAttributesW(file, attrs | FILE_ATTRIBUTE_HIDDEN) != 0
             }
         }
     }
@@ -247,12 +238,9 @@ pub fn unhide<T: AsRef<Path>>(path: T) -> bool
                 vec.remove(0); //remove the '.' character from the file name.
                 let mut copy: PathBuf = path.into();
                 copy.set_file_name(OsString::from_raw_vec(vec).unwrap());
-                return match std::fs::rename(path, copy) {
-                    Ok(_) => true,
-                    Err(_) => false
-                };
+                return std::fs::rename(path, copy).is_ok();
             }
-            return false; //the path does not have a valid file name; can't do anything.
+            false //the path does not have a valid file name; can't do anything.
         } else {
             use std::os::windows::ffi::OsStrExt;
             use windows_sys::Win32::Storage::FileSystem::SetFileAttributesW;
@@ -270,7 +258,7 @@ pub fn unhide<T: AsRef<Path>>(path: T) -> bool
                 if attrs == INVALID_FILE_ATTRIBUTES {
                     return false;
                 }
-                return SetFileAttributesW(file, attrs & !FILE_ATTRIBUTE_HIDDEN) != 0;
+                SetFileAttributesW(file, attrs & !FILE_ATTRIBUTE_HIDDEN) != 0
             }
         }
     }

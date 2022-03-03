@@ -29,33 +29,24 @@
 use std::path::{Path, PathBuf};
 
 pub fn get_app_cache() -> Option<PathBuf> {
-    if let Some(dir) = std::env::var_os("XDG_CACHE_HOME") {
-        Some(dir.into())
-    } else if let Some(home) = std::env::var_os("HOME") {
-        Some(PathBuf::from(home).join(".cache"))
-    } else {
-        None
-    }
+    std::env::var_os("XDG_CACHE_HOME")
+        .map(|v| v.into())
+        .or_else(|| std::env::var_os("HOME"))
+        .map(|v| PathBuf::from(v).join(".cache"))
 }
 
 pub fn get_app_config() -> Option<PathBuf> {
-    if let Some(dir) = std::env::var_os("XDG_CONFIG_HOME") {
-        Some(dir.into())
-    } else if let Some(home) = std::env::var_os("HOME") {
-        Some(PathBuf::from(home).join(".config"))
-    } else {
-        None
-    }
+    std::env::var_os("XDG_CONFIG_HOME")
+        .map(|v| v.into())
+        .or_else(|| std::env::var_os("HOME"))
+        .map(|v| PathBuf::from(v).join(".config"))
 }
 
 pub fn get_app_data() -> Option<PathBuf> {
-    if let Some(dir) = std::env::var_os("XDG_DATA_HOME") {
-        Some(dir.into())
-    } else if let Some(home) = std::env::var_os("HOME") {
-        Some(PathBuf::from(home).join(".local/share"))
-    } else {
-        None
-    }
+    std::env::var_os("XDG_DATA_HOME")
+        .map(|v| v.into())
+        .or_else(|| std::env::var_os("HOME"))
+        .map(|v| PathBuf::from(v).join(".local/share"))
 }
 
 pub fn get_app_logs() -> Option<PathBuf> {
@@ -127,29 +118,19 @@ pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
 }
 
 pub fn get_user_home() -> Option<PathBuf> {
-    if let Some(home) = std::env::var_os("HOME") {
-        Some(PathBuf::from(home))
-    } else {
-        None
-    }
+    std::env::var_os("HOME").map(|v| v.into())
 }
 
 pub fn get_user_documents() -> Option<PathBuf> {
-    if let Some(dir) = std::env::var_os("XDG_DOCUMENTS_DIR") {
-        Some(dir.into())
-    } else if let Some(home) = std::env::var_os("HOME") {
-        Some(PathBuf::from(home).join("Documents"))
-    } else {
-        None
-    }
+    std::env::var_os("XDG_DOCUMENTS_DIR")
+        .map(|v| v.into())
+        .or_else(|| std::env::var_os("HOME"))
+        .map(|v| PathBuf::from(v).join("Documents"))
 }
 
 pub fn get_user_downloads() -> Option<PathBuf> {
-    if let Some(dir) = std::env::var_os("XDG_DOWNLOAD_DIR") {
-        Some(dir.into())
-    } else if let Some(home) = std::env::var_os("HOME") {
-        Some(PathBuf::from(home).join("Downloads"))
-    } else {
-        None
-    }
+    std::env::var_os("XDG_DOWNLOAD_DIR")
+        .map(|v| v.into())
+        .or_else(|| std::env::var_os("HOME"))
+        .map(|v| PathBuf::from(v).join("Downloads"))
 }

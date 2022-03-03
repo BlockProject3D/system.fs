@@ -30,7 +30,7 @@ use std::path::PathBuf;
 use crate::dirs::system::apple_shared::{get_bundled_asset, get_macos_dir, get_macos_dir_fail_if_sandbox, NS_APPLICATION_SUPPORT_DIRECTORY, NS_CACHES_DIRECTORY, NS_DOCUMENT_DIRECTORY, NS_DOWNLOADS_DIRECTORY, NS_LIBRARY_DIRECTORY, NS_USER_DIRECTORY};
 
 pub fn get_app_cache() -> Option<PathBuf> {
-    get_macos_dir(NS_CACHES_DIRECTORY).map(|v| PathBuf::from(v))
+    get_macos_dir(NS_CACHES_DIRECTORY).map(PathBuf::from)
 }
 
 pub fn get_app_config() -> Option<PathBuf> {
@@ -38,7 +38,7 @@ pub fn get_app_config() -> Option<PathBuf> {
 }
 
 pub fn get_app_data() -> Option<PathBuf> {
-    get_macos_dir(NS_APPLICATION_SUPPORT_DIRECTORY).map(|v| PathBuf::from(v))
+    get_macos_dir(NS_APPLICATION_SUPPORT_DIRECTORY).map(PathBuf::from)
 }
 
 pub fn get_app_logs() -> Option<PathBuf> {
@@ -46,7 +46,7 @@ pub fn get_app_logs() -> Option<PathBuf> {
 }
 
 fn get_app_documents() -> Option<PathBuf> {
-    get_macos_dir(NS_DOCUMENT_DIRECTORY).map(|v| PathBuf::from(v))
+    get_macos_dir(NS_DOCUMENT_DIRECTORY).map(PathBuf::from)
 }
 
 //On iOS there exists no user directories as all applications are sandboxed
