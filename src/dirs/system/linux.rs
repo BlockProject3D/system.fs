@@ -39,8 +39,8 @@ pub fn get_app_cache() -> Option<PathBuf> {
 pub fn get_app_config() -> Option<PathBuf> {
     std::env::var_os("XDG_CONFIG_HOME")
         .map(|v| v.into())
-        .or_else(|| std::env::var_os("HOME"))
-            .map(|v| PathBuf::from(v).join(".config"))
+        .or_else(|| std::env::var_os("HOME")
+            .map(|v| PathBuf::from(v).join(".config")))
 }
 
 pub fn get_app_data() -> Option<PathBuf> {
