@@ -60,7 +60,7 @@ fn attempt_dbus_call(path: &Path) -> bool {
         res = proxy.show_folders(&[&uri.to_string_lossy()], "test");
     } else {
         res = proxy.show_items(&[&uri.to_string_lossy()], "test");
-    }
+    };
     res.is_ok()
 }
 
