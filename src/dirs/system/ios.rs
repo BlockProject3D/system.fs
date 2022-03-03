@@ -26,8 +26,12 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use crate::dirs::system::apple_shared::{
+    get_bundled_asset, get_macos_dir, get_macos_dir_fail_if_sandbox,
+    NS_APPLICATION_SUPPORT_DIRECTORY, NS_CACHES_DIRECTORY, NS_DOCUMENT_DIRECTORY,
+    NS_DOWNLOADS_DIRECTORY, NS_LIBRARY_DIRECTORY, NS_USER_DIRECTORY,
+};
 use std::path::PathBuf;
-use crate::dirs::system::apple_shared::{get_bundled_asset, get_macos_dir, get_macos_dir_fail_if_sandbox, NS_APPLICATION_SUPPORT_DIRECTORY, NS_CACHES_DIRECTORY, NS_DOCUMENT_DIRECTORY, NS_DOWNLOADS_DIRECTORY, NS_LIBRARY_DIRECTORY, NS_USER_DIRECTORY};
 
 pub fn get_app_cache() -> Option<PathBuf> {
     get_macos_dir(NS_CACHES_DIRECTORY).map(PathBuf::from)
@@ -60,7 +64,6 @@ pub fn get_user_downloads() -> Option<PathBuf> {
     None
 }
 
-pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
-{
+pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf> {
     get_bundled_asset(file_name)
 }

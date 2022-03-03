@@ -30,8 +30,7 @@ pub use dunce::canonicalize;
 use std::path::Path;
 
 #[cfg(all(unix, not(any(target_vendor = "apple", target_os = "android"))))]
-fn attempt_dbus_call(path: &Path) -> bool
-{
+fn attempt_dbus_call(path: &Path) -> bool {
     use std::ffi::OsString;
     use zbus::{blocking::Connection, dbus_proxy, Result};
     #[dbus_proxy(
@@ -39,23 +38,22 @@ fn attempt_dbus_call(path: &Path) -> bool
         interface = "org.freedesktop.FileManager1",
         default_path = "/org/freedesktop/FileManager1"
     )]
-    trait FileManager
-    {
+    trait FileManager {
         fn show_folders(&self, uris: &[&str], startup_id: &str) -> Result<()>;
         fn show_items(&self, uris: &[&str], startup_id: &str) -> Result<()>;
     }
     let con = match Connection::session() {
         Ok(v) => v,
-        Err(_) => return false
+        Err(_) => return false,
     };
     let proxy = match FileManagerProxyBlocking::new(&con) {
         Ok(v) => v,
-        Err(_) => return false
+        Err(_) => return false,
     };
     let mut uri = OsString::from("file://");
     let f = match canonicalize(path.as_os_str()) {
         Ok(v) => v,
-        Err(_) => return false
+        Err(_) => return false,
     };
     uri.push(f);
     let res;
@@ -68,14 +66,13 @@ fn attempt_dbus_call(path: &Path) -> bool
 }
 
 #[cfg(all(unix, not(any(target_vendor = "apple", target_os = "android"))))]
-fn attempt_xdg_open(path: &Path) -> bool
-{
-    use std::process::Command;
+fn attempt_xdg_open(path: &Path) -> bool {
     use std::ffi::OsString;
+    use std::process::Command;
     let mut uri = OsString::from("file://");
     let f = match canonicalize(path.as_os_str()) {
         Ok(v) => v,
-        Err(_) => return false
+        Err(_) => return false,
     };
     uri.push(f);
     let res = Command::new("xdg-open")
@@ -86,14 +83,13 @@ fn attempt_xdg_open(path: &Path) -> bool
 
 // Force link against AppKit on mac
 #[cfg(target_os = "macos")]
-#[link(name="AppKit", kind="framework")]
-extern {}
+#[link(name = "AppKit", kind = "framework")]
+extern "C" {}
 
 /// Open the given path in a file explorer on the current platform.
 ///
 /// This is unsupported on iOS as iOS can already expose application files in the Files app since iOS 11.
-pub fn open<T: AsRef<Path>>(path: T) -> bool
-{
+pub fn open<T: AsRef<Path>>(path: T) -> bool {
     let path = path.as_ref();
     cfg_if::cfg_if! {
         if #[cfg(windows)] {
@@ -169,8 +165,7 @@ pub fn open<T: AsRef<Path>>(path: T) -> bool
 }
 
 /// Hides the given path in the current platform's file explorer.
-pub fn hide<T: AsRef<Path>>(path: T) -> bool
-{
+pub fn hide<T: AsRef<Path>>(path: T) -> bool {
     let path = path.as_ref();
     if !path.exists() {
         return false;
@@ -217,8 +212,7 @@ pub fn hide<T: AsRef<Path>>(path: T) -> bool
 }
 
 /// Un-hides the given path in the current platform's file explorer.
-pub fn unhide<T: AsRef<Path>>(path: T) -> bool
-{
+pub fn unhide<T: AsRef<Path>>(path: T) -> bool {
     let path = path.as_ref();
     if !path.exists() {
         return false;

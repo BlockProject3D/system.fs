@@ -26,17 +26,17 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use libc::{strlen, PATH_MAX};
+use objc::class;
+use objc::msg_send;
+use objc::runtime::Object;
+use objc::sel;
+use objc::sel_impl;
+use objc_foundation::{INSArray, INSString, NSArray, NSObject, NSString};
 use std::ffi::OsStr;
 use std::os::raw::{c_char, c_int, c_ulong};
 use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
-use libc::{PATH_MAX, strlen};
-use objc::class;
-use objc::msg_send;
-use objc::sel;
-use objc::sel_impl;
-use objc::runtime::Object;
-use objc_foundation::{INSArray, INSString, NSArray, NSObject, NSString};
 
 pub const NS_LIBRARY_DIRECTORY: c_ulong = 5;
 pub const NS_USER_DIRECTORY: c_ulong = 7;
@@ -47,12 +47,12 @@ pub const NS_DOWNLOADS_DIRECTORY: c_ulong = 15;
 
 const NS_USER_DOMAIN_MASK: c_ulong = 1;
 
-pub fn get_macos_dir(directory: c_ulong) -> Option<String>
-{
+pub fn get_macos_dir(directory: c_ulong) -> Option<String> {
     unsafe {
         let nsfilemanager = class!(NSFileManager);
         let instance: *mut Object = msg_send![nsfilemanager, defaultManager];
-        let directories: *const NSArray<NSObject> = msg_send![instance, URLsForDirectory:directory inDomains:NS_USER_DOMAIN_MASK];
+        let directories: *const NSArray<NSObject> =
+            msg_send![instance, URLsForDirectory:directory inDomains:NS_USER_DOMAIN_MASK];
         if let Some(obj) = (*directories).first_object() {
             let str: *const NSString = msg_send![obj, path];
             if str.is_null() {
@@ -68,10 +68,10 @@ pub fn get_macos_dir(directory: c_ulong) -> Option<String>
     }
 }
 
-pub fn get_macos_dir_fail_if_sandbox(directory: c_ulong) -> Option<PathBuf>
-{
+pub fn get_macos_dir_fail_if_sandbox(directory: c_ulong) -> Option<PathBuf> {
     if let Some(dir) = get_macos_dir(directory) {
-        if dir.contains("Library/Containers/") { //Running in a sandbox
+        if dir.contains("Library/Containers/") {
+            //Running in a sandbox
             None
         } else {
             Some(PathBuf::from(dir))
@@ -85,8 +85,7 @@ extern "C" {
     pub fn _NSGetExecutablePath(buf: *mut c_char, bufsize: *mut u32) -> c_int;
 }
 
-pub fn get_exe_path() -> Option<PathBuf>
-{
+pub fn get_exe_path() -> Option<PathBuf> {
     let mut buf: [c_char; PATH_MAX as usize] = [0; PATH_MAX as usize];
     let mut size: u32 = PATH_MAX as u32;
     unsafe {
@@ -95,7 +94,8 @@ pub fn get_exe_path() -> Option<PathBuf>
             //path is too large
             let mut v = Vec::with_capacity(size as usize);
             let res = _NSGetExecutablePath(v.as_mut_ptr(), &mut size as _);
-            if res != 0 { //Something really bad happened.
+            if res != 0 {
+                //Something really bad happened.
                 return None;
             }
             let str = OsStr::from_bytes(std::mem::transmute(&v[..size as usize]));
@@ -110,12 +110,13 @@ pub fn get_exe_path() -> Option<PathBuf>
     }
 }
 
-pub fn get_bundled_asset(name: &str) -> Option<PathBuf>
-{
-    let (file_path, file_name) = name.rfind('/')
+pub fn get_bundled_asset(name: &str) -> Option<PathBuf> {
+    let (file_path, file_name) = name
+        .rfind('/')
         .map(|v| (Some(&name[..v]), &name[v + 1..]))
         .unwrap_or_else(|| (None, name));
-    let (res_name, res_ext) = file_name.rfind('.')
+    let (res_name, res_ext) = file_name
+        .rfind('.')
         .map(|v| (&file_name[..v], &file_name[v + 1..]))
         .unwrap_or_else(|| (file_name, ""));
     unsafe {
@@ -154,7 +155,8 @@ pub fn get_bundled_asset(name: &str) -> Option<PathBuf>
         };
         let _: () = msg_send![ns_res_ext, release]; //release res_ext as we're not gonna use it again anymore
         let _: () = msg_send![ns_res_name, release]; //release res_name as we're not gonna use it again anymore
-        if str.is_null() { //Asset wasn't found.
+        if str.is_null() {
+            //Asset wasn't found.
             return None;
         }
         let data = (*str).as_str();

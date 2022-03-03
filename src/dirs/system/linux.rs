@@ -58,22 +58,28 @@ pub fn get_app_documents() -> Option<PathBuf> {
 }
 
 #[cfg(target_os = "freebsd")]
-fn get_exe_path_freebsd() -> Option<PathBuf>
-{
-    use std::ffi::OsStr;
-    use std::os::unix::ffi::OsStrExt;
-    use libc::sysctl;
-    use libc::strlen;
+fn get_exe_path_freebsd() -> Option<PathBuf> {
     use libc::size_t;
+    use libc::strlen;
+    use libc::sysctl;
     use libc::CTL_KERN;
     use libc::KERN_PROC;
     use libc::KERN_PROC_PATHNAME;
     use libc::PATH_MAX;
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
     let mut mib = [CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1];
     let mut buf: Vec<u8> = Vec::with_capacity(PATH_MAX);
     let mut cb: size_t = PATH_MAX;
     unsafe {
-        let res = sysctl(mib.as_mut_ptr(), 4, buf.as_mut_ptr() as *mut _, &mut cb as _, std::ptr::null_mut(), 0);
+        let res = sysctl(
+            mib.as_mut_ptr(),
+            4,
+            buf.as_mut_ptr() as *mut _,
+            &mut cb as _,
+            std::ptr::null_mut(),
+            0,
+        );
         if res == 0 {
             //FreeBSD without procfs.
             let len = strlen(buf.as_ptr() as _);
@@ -88,8 +94,7 @@ fn get_exe_path_freebsd() -> Option<PathBuf>
     }
 }
 
-fn get_exe_path() -> Option<PathBuf>
-{
+fn get_exe_path() -> Option<PathBuf> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "freebsd")] {
             get_exe_path_freebsd().parent().map(|v| v.into())
@@ -108,8 +113,7 @@ fn get_exe_path() -> Option<PathBuf>
     }
 }
 
-pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf>
-{
+pub fn get_app_bundled_asset(file_name: &str) -> Option<PathBuf> {
     //Locate app assets folder.
     let assets = get_exe_path()?.join("Assets");
     //Concat with file_name.
