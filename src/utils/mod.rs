@@ -56,8 +56,7 @@ fn attempt_dbus_call(path: &Path) -> bool {
         Err(_) => return false,
     };
     uri.push(f);
-    let res;
-    if path.is_dir() {
+    let res = if path.is_dir() {
         res = proxy.show_folders(&[&uri.to_string_lossy()], "test");
     } else {
         res = proxy.show_items(&[&uri.to_string_lossy()], "test");
