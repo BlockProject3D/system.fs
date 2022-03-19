@@ -26,6 +26,8 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#![allow(dead_code)] //Allow unused functions and constants to stop rust complaining on iOS.
+
 use libc::{strlen, PATH_MAX};
 use objc::class;
 use objc::msg_send;
