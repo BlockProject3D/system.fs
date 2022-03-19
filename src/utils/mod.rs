@@ -87,6 +87,7 @@ extern "C" {}
 /// Open the given path in a file explorer on the current platform.
 ///
 /// This is unsupported on iOS as iOS can already expose application files in the Files app since iOS 11.
+#[allow(unused_variables)] //Stop rust complaining about unused vars on iOS because this function has no effect on iOS.
 pub fn open<T: AsRef<Path>>(path: T) -> bool {
     let path = path.as_ref();
     cfg_if::cfg_if! {
