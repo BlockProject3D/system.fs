@@ -31,23 +31,19 @@ use std::path::{Path, PathBuf};
 pub fn get_app_cache() -> Option<PathBuf> {
     std::env::var_os("XDG_CACHE_HOME")
         .map(|v| v.into())
-        .or_else(|| std::env::var_os("HOME")
-            .map(|v| PathBuf::from(v).join(".cache")))
-
+        .or_else(|| std::env::var_os("HOME").map(|v| PathBuf::from(v).join(".cache")))
 }
 
 pub fn get_app_config() -> Option<PathBuf> {
     std::env::var_os("XDG_CONFIG_HOME")
         .map(|v| v.into())
-        .or_else(|| std::env::var_os("HOME")
-            .map(|v| PathBuf::from(v).join(".config")))
+        .or_else(|| std::env::var_os("HOME").map(|v| PathBuf::from(v).join(".config")))
 }
 
 pub fn get_app_data() -> Option<PathBuf> {
     std::env::var_os("XDG_DATA_HOME")
         .map(|v| v.into())
-        .or_else(|| std::env::var_os("HOME")
-            .map(|v| PathBuf::from(v).join(".local/share")))
+        .or_else(|| std::env::var_os("HOME").map(|v| PathBuf::from(v).join(".local/share")))
 }
 
 pub fn get_app_logs() -> Option<PathBuf> {
@@ -129,13 +125,11 @@ pub fn get_user_home() -> Option<PathBuf> {
 pub fn get_user_documents() -> Option<PathBuf> {
     std::env::var_os("XDG_DOCUMENTS_DIR")
         .map(|v| v.into())
-        .or_else(|| std::env::var_os("HOME")
-            .map(|v| PathBuf::from(v).join("Documents")))
+        .or_else(|| std::env::var_os("HOME").map(|v| PathBuf::from(v).join("Documents")))
 }
 
 pub fn get_user_downloads() -> Option<PathBuf> {
     std::env::var_os("XDG_DOWNLOAD_DIR")
         .map(|v| v.into())
-        .or_else(|| std::env::var_os("HOME")
-            .map(|v| PathBuf::from(v).join("Downloads")))
+        .or_else(|| std::env::var_os("HOME").map(|v| PathBuf::from(v).join("Downloads")))
 }
