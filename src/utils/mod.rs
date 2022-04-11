@@ -26,12 +26,12 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-mod path;
-mod open;
 mod hide;
+mod open;
+mod path;
 
-pub use path::PathExt;
 pub use dunce::canonicalize;
-pub use open::open;
 pub use hide::hide;
 pub use hide::unhide;
+pub use open::open;
+pub use path::PathExt;

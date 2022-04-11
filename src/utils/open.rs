@@ -26,17 +26,17 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::path::Path;
 use super::canonicalize;
+use std::path::Path;
 
 #[cfg(all(unix, not(any(target_vendor = "apple", target_os = "android"))))]
 fn attempt_dbus_call(path: &Path) -> bool {
     use std::ffi::OsString;
     use zbus::{blocking::Connection, dbus_proxy, Result};
     #[dbus_proxy(
-    default_service = "org.freedesktop.FileManager1",
-    interface = "org.freedesktop.FileManager1",
-    default_path = "/org/freedesktop/FileManager1"
+        default_service = "org.freedesktop.FileManager1",
+        interface = "org.freedesktop.FileManager1",
+        default_path = "/org/freedesktop/FileManager1"
     )]
     trait FileManager {
         fn show_folders(&self, uris: &[&str], startup_id: &str) -> Result<()>;
@@ -58,7 +58,7 @@ fn attempt_dbus_call(path: &Path) -> bool {
     uri.push(f);
     let res = match path.is_dir() {
         true => proxy.show_folders(&[&uri.to_string_lossy()], "test"),
-        false => proxy.show_items(&[&uri.to_string_lossy()], "test")
+        false => proxy.show_items(&[&uri.to_string_lossy()], "test"),
     };
     res.is_ok()
 }

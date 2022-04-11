@@ -63,9 +63,9 @@ impl PathExt for Path {
 
 #[cfg(test)]
 mod tests {
+    use crate::utils::PathExt;
     use std::borrow::Cow;
     use std::path::Path;
-    use crate::utils::PathExt;
 
     #[test]
     fn basic() {
